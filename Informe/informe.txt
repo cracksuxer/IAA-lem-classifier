@@ -1,0 +1,74 @@
+Para el preprocesamiento de los datos se sigue una metodologia de tomar una cadena (documento) de texto como entrada 
+y realizar una serie de pasos de preprocesamiento de texto en ella. Estos pasos incluyen:
+  - Convertir todo el texto a minúsculas usando la función to_casefold.
+  - Eliminar cualquier puntuación del texto usando la función remove_punctuation.
+  - Eliminar cualquier URL y hashtag del texto utilizando la función remove_url_hashtags.
+  - Eliminar cualquier palabra de detención (stop word) del texto utilizando la función remove_stop_word.
+  - Eliminar cualquier palabra que tenga una sola letra del texto utilizando la función remove_one_char_words.
+  - Corregir cualquier error de ortografía en el texto utilizando la función correct_spelling.
+  - Eliminar cualquier puntuación del texto nuevamente.
+  - Eliminar cualquier palabra de detención del texto nuevamente.
+
+Todo este conjunto de pasos estan implementados en la funcion preprocess_text() que se
+declara inicialmente en el archivo vocabulary.py y más adelante se importa desde ese mismo
+módulo.
+
+-- PARTE 1: PREPROCESAMIENTO DE LOS DATOS Y GENERACIÓN DE VOCABULARIO --
+Una vez con los datos limpios, se procede lematiza cada palabra del texto utilizando la función
+lemmatize_text() que se declara inicialmente en el archivo vocabulary.py, sin embargo debido a 
+que esto bajaba la precisión del modelo, se decidió no utilizarlo. Finalmente, se procede a ordenar
+el texto alfabeticamente, eliminar duplicados y a tokenizarlo utilizando la función tokenize_text() 
+que se declara inicialmente en el archivo vocabulary.py y se crea el vocabulario a partir de un
+corpus de entrenamiento utilizando.
+
+-- PARTE 2: ENTRENAMIENTO DEL MODELO Y GENERACION DEL CORPUS DE SENTIMIENTO --
+Una vez generado el vocabulario, pasamos a generar los corpues de cada clase, para ellos 
+utilizamos la función generate_corpus que toma un archivo un corpus y lo lee utilizando 
+la función open con el parámetro encoding establecido en "utf-8". A continuación, se llama a 
+la función parse_text para procesar el archivo de texto y tener un diccionario con las oraciones
+y sus respectivas etiquetas para poder manipularlas de mejor manera.
+
+Luego, se filtra el resultado en tres listas diferentes: filtered_neutral, filtered_positive y
+filtered_negative. Cada una de estas listas contiene los documentos etiquetadas como "neutral", 
+"positivo" y "negativo", respectivamente.
+
+Luego, se itera sobre cada una de las listas, y para cada una de ellas, se realiza una serie
+de pasos. Primero, se procesa, luego se guarda la lista de oraciones procesadas en un archivo
+de texto utilizando con el nombre del corpus más lo que indica la polaridad de las oraciones
+(neutral, positiva o negativa) y finalmente, la función devuelve los corpues que necesitamos
+para entrenar el modelo.
+
+Para terminar con esta parte, pasamos a generar los modelos con el corpus especificado y el 
+vocabulario generado anteriormente. Primero se llama a la función count_words para contar el
+número de veces que aparece cada palabra en cada corpus de texto etiquetado, después se itera
+sobre cada palabra del vocabulario y se calcula la probabilidad logarítmica de la palabra en
+cada corpus de corpus etiquetado utilizando la función logarithmic_probability. Las
+probabilidades logarítmicas se almacenan en los diccionarios neutral_prob, negative_prob y
+positive_prob. Ya tendríamos los modelos generado y listos para ser utilizados.
+
+-- PARTE 3: EVALUACIÓN DEL MODELO (CLASIFICACIÓN) --
+Con el modelo y el corpus, pasamos a evaluar el modelo. Para ello, se itera por cada palabra de
+cada noticia que compone cada corpus de prueba y calcula la importancia que tendría cada palabra
+en cada corpus. Para ello simplemente se suma la probabilidad logarítmica de cada palabra y para
+que el desbalanceamiento no afecte demasiado se le suma al final un ajuste en funcion a la cantidad
+de documentos que contiene el corpus. Indicar, que para solventar el problema de palabras UKNOWN se
+utiliza el suavizado de Laplace, que consiste en sumarle 1 a ambos denominadores y numeradores de
+la función logarithmic_probability. Finalmente, se compara la importancia de cada palabra en cada
+corpus y se devuelve la etiqueta que tenga mayor importancia. 
+
+Para saber que tan bien ha realizado el modelo la clasificación, se calcula la precisión del
+modelo comparando las predicciones con las etiquetas reales de cada corpus de prueba.
+
+-- PARTE 4: ANÁLISIS DE RESULTADOS --
+100% entrenamiento, 100% validación
+Se obtuvo un score del 80.02% después de barajar muchas opciones de preprocesamiento de texto,
+donde más suele fallar el modelo es en la predicción de las noticias positivas dado a la gran
+correlación que existe entre las palabras positivas y las neutras en el corpus.
+
+2500 entrenamiento, 500 validación
+Se obtuvo un score del 66%, en este caso parece que ha fallado prácticamente la misma cantidad
+de veces en la clase neutra que en la positiva. Esto se debe a que el corpus de entrenamiento
+es muy pequeño y no se ha podido entrenar bien el modelo.
+
+En ambos casos, parece que sabe distinguir más o menos bien las noticias negativas, pero no
+tanto las positivas y neutras.
