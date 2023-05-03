@@ -9,6 +9,7 @@ import csv
 import pandas as pd # type: ignore
 from rich_tools import table_to_df # type: ignore
 from rich.table import Table
+import math
 
 console = Console()
 
@@ -110,9 +111,9 @@ def classify() -> None:
     table_resumee.add_column(CLASIFICATION, justify='center')
     
     for i, doc in enumerate(read_csv('./lemmatize_words_2_2.csv')):
-        neutral_prob: float = size_neutral / total_len
-        negative_prob: float = size_negative / total_len
-        positive_prob: float = size_positive / total_len
+        neutral_prob: float = math.log(size_neutral / total_len)
+        negative_prob: float = math.log(size_negative / total_len)
+        positive_prob: float = math.log(size_positive / total_len)
         doc_list = doc.split(' ')
         for word in doc_list:
             if word in nuetral_model_dic:
